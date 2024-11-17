@@ -1,5 +1,5 @@
 import { Response } from "express";
-import { NotFoundError } from "typescript-rest/dist/server/model/errors";
+import { BadRequestError, NotFoundError } from "typescript-rest/dist/server/model/errors";
 
 export class Controller {
     constructor() {
@@ -7,6 +7,15 @@ export class Controller {
 
     IfUserNotFound() {
         throw new NotFoundError('User not found')
+    };
+
+    IfRequestIsInvalid() {
+        throw new BadRequestError('Bad Request')
+    };
+
+
+    IfUserAlreadyExists() {
+        throw new NotFoundError('User with this email already exists')
     };
 
     sendResponse(res: Response, data: any, status: number = 200) {

@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
 import { ContextRequest, ContextResponse, FileParam, FormParam, Path, POST, PUT, Security } from 'typescript-rest';
-import { BadRequestError, NotFoundError, UnauthorizedError } from 'typescript-rest/dist/server/model/errors';
+import { UnauthorizedError } from 'typescript-rest/dist/server/model/errors';
 import User, { UserCreationAttributes } from '../models/sequelize/UserModel';
 import { AuthService } from '../services/AuthService';
 import { UsersService } from '../services/UsersService';
@@ -32,25 +32,11 @@ export class AuthController extends Controller {
                 @FileParam('profileImg') profileImg: Express.Multer.File,
                 @ContextResponse res: Response
         ) {
-
                 const existingUser = await this.usersService.findUserByEmail(email);
-                if (existingUser) {
-                        throw new BadRequestError('User with this email already exists');
-                }
-
-                const fileName = profileImg ? saveBufferToFile(profileImg) : '';
-
-                const userData: UserCreationAttributes = {
-                        name,
-                        email,
-                        password,
-                        phone,
-                        userType: userType,
-                        profileImg: fileName
-                };
-
-                const newUser = await this.usersService.createUser(userData);
-                res.status(201).json(newUser);
+                existingUser && this.IfUserAlreadyExists();
+                const payload = this.generateSignupPayload(name, email, password, phone, userType, profileImg);
+                await this.usersService.createUser(payload)
+                        .then(newUser => this.sendResponse(res, newUser, 201));
         }
 
 
@@ -59,13 +45,12 @@ export class AuthController extends Controller {
         @tryCatch('Failed to login user')
         async login(@ContextRequest req: Request, @ContextResponse res: Response) {
                 const { email, password } = req.body;
+                const user = await this.usersService.findUserByEmail(email)
 
-                const handleResponse = async (user: User | null) => {
-                        !user && this.IfUserNotFound();
-                        user && (await this.isUserPasswordValid(user, password)) && this.generateToken(user).then(token => this.sendResponse(res, { user, token }));
-                }
-
-                await this.usersService.findUserByEmail(email).then(handleResponse);
+                !user && this.IfUserNotFound() // if user is not found
+                user && await this.isUserPasswordValid(user, password) // check if passsword is valid
+                        .then(_ => this.generateToken(user)) // generate auth token
+                        .then(token => this.sendResponse(res, { user, token })) // send response back to the client
         }
 
 
@@ -74,16 +59,11 @@ export class AuthController extends Controller {
         @tryCatch('Failed to reset password')
         async resetPassword(@ContextRequest req: Request, @ContextResponse res: Response) {
                 const { email, newPassword } = req.body;
-
-
                 const user = await this.usersService.findUserByEmail(email);
-                if (!user) {
-                        throw new NotFoundError('User not found');
-                }
 
-
-                await this.authService.resetPassword(user, newPassword);
-                res.status(200).json({ message: 'Password reset successful' });
+                !user && this.IfUserNotFound(); // if user is not found
+                user && await this.authService.resetPassword(user, newPassword) // reset password
+                        .then(_ => this.sendResponse(res, { message: 'Password reset successful' })) // send response back to client
         }
 
 
@@ -96,39 +76,37 @@ export class AuthController extends Controller {
 
                 // @ts-ignore
                 const userId = req?.user?.id;
-
-                if (!userId) {
-                        throw new BadRequestError('Bad Request');
-                }
-
-
+                !userId && this.IfRequestIsInvalid();
                 const user = await this.usersService.getUserById(userId);
-                if (!user) {
-                        throw new NotFoundError('User not found');
-                }
+                !user && this.IfUserNotFound(); // if user is not found
 
-                const userHashedPassword = (await this.authService.getUserPassword(user.id)) || '';
-
-
-                const isPasswordValid = await this.authService.verifyPassword(currentPassword, userHashedPassword);
-                if (!isPasswordValid) {
-                        throw new UnauthorizedError('Current password is incorrect');
-                }
-
-
-                await this.authService.changePassword(user, newPassword);
-                res.status(200).json({ message: 'Password change successful' });
+                user && await this.isUserPasswordValid(user, currentPassword) // check if passsword is valid
+                        .then(_ => this.authService.changePassword(user, newPassword)) // generate auth token
+                        .then(_ => this.sendResponse(res, { message: 'Password change successful' })) // send response back to the client
         }
 
-        private generateToken = async (user: User) => {
+        private async generateToken(user: User) {
                 return this.authService.generateToken(user)
         }
 
-        private isUserPasswordValid = async (user: User, password: string) => {
+        private async isUserPasswordValid(user: User, password: string) {
                 const userHashedPassword = (await this.authService.getUserPassword(user.id)) || '';
                 const isPasswordValid = await this.authService.verifyPassword(password, userHashedPassword);
                 if (!isPasswordValid) throw new UnauthorizedError('Invalid email or password');
                 return isPasswordValid;
+        }
+
+        private generateSignupPayload(name: string, email: string, password: string, phone: string, userType: 'user' | 'admin', profileImg: Express.Multer.File): UserCreationAttributes {
+                const fileName = profileImg ? saveBufferToFile(profileImg) : '';
+
+                return {
+                        name,
+                        email,
+                        password,
+                        phone,
+                        userType,
+                        profileImg: fileName
+                };
         }
 
 }
