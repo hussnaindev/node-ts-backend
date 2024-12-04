@@ -1,8 +1,11 @@
 import { Response } from "express";
 import { BadRequestError, NotFoundError } from "typescript-rest/dist/server/model/errors";
-
+import { v4 as uuid } from 'uuid';
 export class Controller {
+    public reqId: string;
+    
     constructor() {
+        this.reqId = uuid();
     }
 
     IfUserNotFound() {

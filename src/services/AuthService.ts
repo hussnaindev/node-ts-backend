@@ -1,6 +1,5 @@
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
-import { v4 as uuid } from 'uuid';
 import { LOG_GROUPS, LOG_STREAMS } from '../constants/constants';
 import User from '../models/sequelize/UserModel';
 import Logger from '../utils/Logger';
@@ -8,8 +7,7 @@ import { tryCatch } from '../utils/decorators/tryCatch';
 export class AuthService {
         private logger: Logger;
 
-        constructor() {
-                const reqId = uuid();
+        constructor(reqId?: string) {
                 this.logger = new Logger(LOG_GROUPS.NODE_SERVER_LOGS, LOG_STREAMS.REQUEST_LOGS, reqId);
         }
 

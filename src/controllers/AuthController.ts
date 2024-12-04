@@ -15,8 +15,8 @@ export class AuthController extends Controller {
 
         constructor() {
                 super()
-                this.authService = new AuthService();
-                this.usersService = new UsersService();
+                this.authService = new AuthService(this.reqId);
+                this.usersService = new UsersService(this.reqId);
         }
 
 

@@ -1,9 +1,16 @@
 import { BadRequestError, NotFoundError } from 'typescript-rest/dist/server/model/errors';
+import { LOG_GROUPS, LOG_STREAMS } from '../constants/constants';
 import User, { UserCreationAttributes } from '../models/sequelize/UserModel';
 import { tryCatch } from '../utils/decorators/tryCatch';
+import Logger from '../utils/Logger';
 import { AuthService } from './AuthService';
-
 export class UsersService {
+        private logger: Logger;
+
+        constructor(reqId?: string) {
+                this.logger = new Logger(LOG_GROUPS.NODE_SERVER_LOGS, LOG_STREAMS.REQUEST_LOGS, reqId);
+        }
+
         @tryCatch('Failed to create user')
         async createUser(userData: UserCreationAttributes) {
                 const existingUser = await this.findUserByEmail(userData.email);
