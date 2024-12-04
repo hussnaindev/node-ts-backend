@@ -1,7 +1,7 @@
-import { Bucket, Storage } from '@google-cloud/storage';
-import { generateFileName } from '../utils/files';
+import { Bucket as GCPBucket, Storage } from '@google-cloud/storage';
+import { generateFileName } from '../../../utils/files';
 
-export class BucketImagesService {
+export class Bucket {
     private storage: Storage;
     private bucketName: string;
 
@@ -10,16 +10,10 @@ export class BucketImagesService {
         this.bucketName = process.env.BUCKET_NAME || '';
     }
 
-    private getBucket(): Bucket {
+    private getBucket(): GCPBucket {
         return this.storage.bucket(this.bucketName);
     }
 
-    /**
-     * Uploads an image buffer to Google Cloud Storage.
-     * @param {Buffer} fileBuffer - The file buffer.
-     * @param {string} destinationPath - The destination path in the bucket.
-     * @returns {Promise<string>} - Public URL of the uploaded image.
-     */
     async uploadImage(fileBuffer: Buffer, destinationPath: string): Promise<string> {
         try {
             const bucketFile = this.getBucket().file(destinationPath);
@@ -38,12 +32,6 @@ export class BucketImagesService {
         }
     }
 
-    /**
-     * Uploads an array of image buffers to Google Cloud Storage.
-     * @param {Array<Express.Multer.File[]>} files - An array of files.
-     * @param {string} basePath - The base path in the bucket for storing images.
-     * @returns {Promise<string[]>} - An array of public URLs for the uploaded images.
-     */
     async uploadImages(files: Express.Multer.File[], basePath: string): Promise<string[]> {
         const uploadPromises = files.map(async (file) => {
             const uniqueFileName = generateFileName(file);
@@ -54,11 +42,6 @@ export class BucketImagesService {
         return Promise.all(uploadPromises);
     }
 
-    /**
-     * Gets the public URL of an image in Google Cloud Storage.
-     * @param {string} bucketFilePath - The path of the file in the bucket.
-     * @returns {string} - Public URL of the image.
-     */
     getImageUrl(bucketFilePath: string): string {
         return `https://storage.googleapis.com/${this.bucketName}/${bucketFilePath}`;
     }
