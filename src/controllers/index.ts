@@ -1,5 +1,5 @@
-import { AuthController } from './AuthController';
-import { UsersController } from './UsersController';
+import { AuthController } from './AuthController/AuthController';
+import { UsersController } from './UsersController/UsersController';
 
 export const controllers = [
         AuthController,

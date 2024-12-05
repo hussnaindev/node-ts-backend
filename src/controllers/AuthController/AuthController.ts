@@ -1,12 +1,12 @@
 import { Request, Response } from 'express';
 import { ContextRequest, ContextResponse, FileParam, FormParam, Path, POST, PUT, Security } from 'typescript-rest';
 import { UnauthorizedError } from 'typescript-rest/dist/server/model/errors';
-import User, { UserCreationAttributes } from '../models/sequelize/UserModel';
-import { AuthService } from '../services/AuthService';
-import { UsersService } from '../services/UsersService';
-import { tryCatch } from '../utils/decorators/tryCatch';
-import { saveBufferToFile } from '../utils/files';
-import { Controller } from './Controller';
+import User, { UserCreationAttributes } from '../../models/sequelize/UserModel';
+import { AuthService } from '../../services/AuthService';
+import { UsersService } from '../../services/UsersService';
+import { tryCatch } from '../../utils/decorators/tryCatch';
+import { saveBufferToFile } from '../../utils/files';
+import { Controller } from '../Controller';
 
 @Path('/auth')
 export class AuthController extends Controller {

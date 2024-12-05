@@ -18,7 +18,6 @@ export class SocketServer {
     this.io = new SocketIOServer(this.httpServer, {
       cors: {
         origin: '*', // Allow all origins (adjust for production)
-        methods: ['GET', 'POST'],
       },
     });
 
