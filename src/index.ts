@@ -1,7 +1,7 @@
 import 'reflect-metadata'; // required for TypeScript decorators
 import { app } from './app';
 import { connectMongoDB } from './config/databases/mongodb';
-import { SocketServer } from './integrations/sockets/SocketServer';
+import { ChatService } from './services/ChatService';
 
 connectMongoDB();
 
@@ -11,5 +11,5 @@ app.listen(port, () => {
         console.log(`Server running on http://localhost:${port}`);
 });
 
-const socketServer = new SocketServer();
-socketServer.start();
+const chatService = new ChatService();
+chatService.start();
