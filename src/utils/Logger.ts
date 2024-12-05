@@ -6,8 +6,8 @@ class Logger {
     private reqId: string | null;
     private env: string;
 
-    constructor(logGroupName: string, logStreamName: string, reqId?: string) {
-        this.cloudwatch = new Cloudwatch(logGroupName, logStreamName);
+    constructor(logGroupName?: string, logStreamName?: string, reqId?: string) {
+        this.cloudwatch = new Cloudwatch(logGroupName || process.env.AWS_DEFAULT_LOG_GROUP || '', logStreamName || process.env.AWS_DEFAULT_LOG_STREAM || '');
         this.env = process.env.ENV || 'dev';
         this.reqId = reqId || null;
     }
